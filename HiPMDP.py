@@ -315,7 +315,7 @@ class HiPMDP(object):
 
 	def __initialize_DDQN(self):
 		"""Initialize Double DQN."""
-		tf.reset_default_graph()
+		tf.compat.v1.reset_default_graph()
 		self.mainDQN = Qnetwork(self.num_dims, self.num_actions, clip=self.grad_clip, activation_fn=tf.nn.relu, hidden_layer_sizes=self.ddqn_hidden_layer_sizes)
 		self.targetDQN = Qnetwork(self.num_dims, self.num_actions, clip=self.grad_clip, activation_fn=tf.nn.relu, hidden_layer_sizes=self.ddqn_hidden_layer_sizes)
 		init = tf.global_variables_initializer()
