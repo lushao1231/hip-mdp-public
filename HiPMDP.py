@@ -9,6 +9,8 @@ import pickle
 from Qnetwork import Qnetwork
 from ExperienceReplay import ExperienceReplay
 from BayesianNeuralNetwork import *
+import math
+
 class HiPMDP(object):
 	"""
 	The HiP-MDP class can be used to:
@@ -147,7 +149,9 @@ class HiPMDP(object):
 			self.min_avg_rwd_per_ep = 980
 			self.bnn_learning_rate = 0.00005
 			self.num_initial_update_iters = 10
-			self.num_approx_episodes = 1000 # Use extra approximated episodes since finding the goal state takes a bit of luck
+			# self.num_initial_update_iters = 1
+			self.num_approx_episodes = 1000 #Use extra approximated episodes since finding the goal state takes a bit of luck
+			# self.num_approx_episodes = 3
 			self.bnn_start = 100
 			self.dqn_start = 100
 			self.wb_num_epochs = 300
@@ -236,8 +240,8 @@ class HiPMDP(object):
 		"""Helper function for updating target DQN."""
 		self.op_holder=[]
 		total_vars = len(self.trainables)
-		for idx , var in enumerate(self.trainables[0:total_vars/2]):
-			self.op_holder.append(self.trainables[idx + total_vars/2].assign((var.value()*self.tau)+((1-self.tau) * self.trainables[idx + total_vars/2].value())))
+		for idx , var in enumerate(self.trainables[0:int(total_vars/2)]):
+			self.op_holder.append(self.trainables[idx + int(total_vars/2)].assign((var.value()*self.tau)+((1-self.tau) * self.trainables[idx + int(total_vars/2)].value())))
 		return self.op_holder
 
 	def __update_target(self):
@@ -251,7 +255,7 @@ class HiPMDP(object):
 			exp_buffer = self.real_buffer
 		else:
 			exp_buffer = self.fictional_buffer
-		for batch_idx in xrange(self.num_batch_updates):
+		for batch_idx in range(self.num_batch_updates):
 			# Draw experience sample and importance weights
 			train_batch, is_weights, indices = exp_buffer.sample(self.instance_steps)
 			# Calculate DDQN target
@@ -318,10 +322,10 @@ class HiPMDP(object):
 		tf.compat.v1.reset_default_graph()
 		self.mainDQN = Qnetwork(self.num_dims, self.num_actions, clip=self.grad_clip, activation_fn=tf.nn.relu, hidden_layer_sizes=self.ddqn_hidden_layer_sizes)
 		self.targetDQN = Qnetwork(self.num_dims, self.num_actions, clip=self.grad_clip, activation_fn=tf.nn.relu, hidden_layer_sizes=self.ddqn_hidden_layer_sizes)
-		init = tf.global_variables_initializer()
-		self.trainables = tf.trainable_variables()
+		init = tf.compat.v1.global_variables_initializer()
+		self.trainables = tf.compat.v1.trainable_variables()
 		self.targetOps = self.__update_target_graph()
-		self.sess = tf.Session()
+		self.sess = tf.compat.v1.Session()
 		self.sess.run(init)
 		self.__update_target()
 
@@ -350,8 +354,8 @@ class HiPMDP(object):
 	def __compute_bnn_training_error(self):
 		"""Compute BNN training error on most recent episode."""
 		exp = np.reshape(self.episode_buffer_bnn, (len(self.episode_buffer_bnn),-1))
-		episode_X = np.array([np.hstack([exp[tt,0],exp[tt,1]]) for tt in xrange(exp.shape[0])])
-		episode_Y = np.array([exp[tt,3] for tt in xrange(exp.shape[0])])
+		episode_X = np.array([np.hstack([exp[tt,0],exp[tt,1]]) for tt in range(exp.shape[0])])
+		episode_Y = np.array([exp[tt,3] for tt in range(exp.shape[0])])
 		if self.state_diffs:
 			# subtract previous state
 			episode_Y -= episode_X[:,:self.num_dims]
@@ -547,7 +551,7 @@ class HiPMDP(object):
 						if self.state_diffs:
 							# subtract previous state
 							episode_Y -= episode_X[:,:self.num_dims]
-						for update_iter in xrange(self.num_initial_update_iters):	
+						for update_iter in range(self.num_initial_update_iters):	
 							if self.run_type_full:
 								self.__update_latent_weights()
 								l2_errors = self.network.get_td_error(np.hstack([episode_X, np.tile(self.weight_set, (episode_X.shape[0],1))]), episode_Y, 0.0, 1.0)
@@ -558,13 +562,14 @@ class HiPMDP(object):
 							if self.print_output:
 								print('BNN Error after BNN update iter {} : {}'.format(update_iter,np.mean(l2_errors)))
 					else:
-						for update_iter in xrange(self.num_bnn_updates):
+						for update_iter in range(self.num_bnn_updates):
 							if self.run_type_full:
 								self.__update_latent_weights()
 							self.__update_BNN()
 					
 					# Start training DQN after dqn_start steps on the real environment
 					if self.initial_bnn_collection and self.instance_steps >= self.dqn_start:
+						print("approx episodes = ", self.num_approx_episodes)
 						self.train_dqn = True
 						self.initial_bnn_collection = False
 						# Approximate Episodes
@@ -620,6 +625,7 @@ class HiPMDP(object):
 
 		while self.instance_iter < self.instance_count:
 			self.run_instance()
+			self.instance_iter += 1
 			# Save results
 			networkweights = None
 			if self.run_type != 'modelfree':
@@ -636,7 +642,6 @@ class HiPMDP(object):
 				with open(self.domain + '_' + self.run_type + '_results_inst' + str(self.default_inst) + '_uaiHiP_larger_exp_replay_preload_{}'.format(self.run),'w') as f:
 					pickle.dump((exp_buffer, networkweights, self.rewards, self.avg_rwd_per_ep, self.full_task_weights,
 						self.sys_param_set, self.mean_episode_errors, self.std_episode_errors), f)
-			self.instance_iter += 1
 		return (exp_buffer, networkweights, self.rewards, self.avg_rwd_per_ep, self.full_task_weights,
 						self.sys_param_set, self.mean_episode_errors, self.std_episode_errors)
 

@@ -1,10 +1,8 @@
 """
 Prioritized experience replay implementation adapted from https://arxiv.org/abs/1511.05952
 """
-# import autograd.numpy.random as npr
-import numpy.random as nr
-# import autograd.numpy as np
-import numpy as np
+import autograd.numpy.random as npr
+import autograd.numpy as np
 import math
 from PriorityQueue import PriorityQueue
 
@@ -130,7 +128,7 @@ class ExperienceReplay():
 		exp_list -- list of transitions (each is a numpy array)
 		"""
 		# loop over experiences and store each one
-		for trans_idx in xrange(len(exp_list)):
+		for trans_idx in range(len(exp_list)):
 			self.store(exp_list[trans_idx])
 
 	def add_with_priorities(self, exp_list, priorities_list):
@@ -140,7 +138,7 @@ class ExperienceReplay():
 		exp_list -- list of transitions (each is a numpy array)
 		priorities_list -- list of priorities (one for each transition)
 		"""
-		for trans_idx in xrange(len(exp_list)):
+		for trans_idx in range(len(exp_list)):
 			self.store(exp_list[trans_idx], priorities_list[trans_idx])
 
 	def sample(self, total_steps=0):
@@ -156,7 +154,7 @@ class ExperienceReplay():
 
 		# Perform uniform sampling of experience buffer
 		if not self.mem_priority: 
-			indices = nr.sample(range(N), num_samples)
+			indices = npr.choice(range(N), replace=False, size=num_samples)
 			exp_batch = np.array(self.exp_buffer)[indices]
 			weights = np.ones(len(indices)) / (len(indices)*1.0)
 			return np.reshape(exp_batch,(num_samples,-1)), weights, indices
@@ -170,7 +168,7 @@ class ExperienceReplay():
 			# Perform stratified sampling of priority queue 
 			for i_exp in range(num_samples)[::-1]:
 				# To increase the training batch size we sample several times from each strata, repeated indices are eliminated
-				rank_indices_set.add(nr.randint(distribution['strata_ends'][i_exp/self.num_strata_samples], distribution['strata_ends'][(i_exp/self.num_strata_samples) + 1]))
+				rank_indices_set.add(npr.randint(distribution['strata_ends'][int(i_exp/self.num_strata_samples)], distribution['strata_ends'][int(i_exp/self.num_strata_samples) + 1]))
 			rank_indices = list(rank_indices_set)
 			exp_indices = self.pq.get_values_by_val(rank_indices)
 			exp_batch = [self.exp_buffer[int(exp_idx)] for exp_idx in exp_indices]
@@ -190,7 +188,7 @@ class ExperienceReplay():
 		Arguments:
 		n -- number of transitions to sample
 		"""
-		indices = nr.sample(range(self.size),size=n)
+		indices = npr.choice(range(self.size), replace=False, size=n)
 		exp_batch = np.array(self.exp_buffer)[indices]
 		return np.reshape(exp_batch,(n, -1))
 
@@ -201,9 +199,8 @@ class ExperienceReplay():
 		Arguments:
 		pq_insert_list -- list containing [priority, exp_index] for each transition in the sample
 		"""
-		for i in xrange(len(pq_insert_list)):
+		for i in range(len(pq_insert_list)):
 			priority = pq_insert_list[i][0]
 			exp_idx = pq_insert_list[i][1]
 			self.pq.update_by_val(exp_idx, priority, exp_idx)
-
 

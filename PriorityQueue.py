@@ -162,7 +162,7 @@ class PriorityQueue(object):
 		"""
 		if order == 'exp':
 			priorities = np.zeros(self.size)
-			for exp_idx in xrange(self.size):
+			for exp_idx in range(self.size):
 				pq_idx = self.exp_hash[exp_idx]
 				priorities[exp_idx] = self.pq_array[pq_idx,0]
 			return priorities

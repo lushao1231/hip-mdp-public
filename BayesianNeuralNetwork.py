@@ -14,23 +14,23 @@ import math
 
 
 class WeightsParser(object):
-    """A helper class to index into a parameter vector."""
-    def __init__(self):
-        self.idxs_and_shapes = {}
-        self.num_weights = 0
+	"""A helper class to index into a parameter vector."""
+	def __init__(self):
+		self.idxs_and_shapes = {}
+		self.num_weights = 0
 
-    def add_shape(self, name, shape):
-        start = self.num_weights
-        self.num_weights += np.prod(shape)
-        self.idxs_and_shapes[name] = (slice(start, self.num_weights), shape)
+	def add_shape(self, name, shape):
+		start = self.num_weights
+		self.num_weights += np.prod(shape)
+		self.idxs_and_shapes[name] = (slice(start, self.num_weights), shape)
 
-    def get(self, vect, name):
-        idxs, shape = self.idxs_and_shapes[name]
-        return np.reshape(vect[idxs], shape)
+	def get(self, vect, name):
+		idxs, shape = self.idxs_and_shapes[name]
+		return np.reshape(vect[idxs], shape)
 
-    def get_indexes(self, vect, name):
-        idxs, shape = self.idxs_and_shapes[name]
-        return idxs
+	def get_indexes(self, vect, name):
+		idxs, shape = self.idxs_and_shapes[name]
+		return idxs
 
 class BayesianNeuralNetwork(object):
 	"""Meta-class to handle much of the neccessary computations for BNN inference."""
@@ -94,25 +94,25 @@ class BayesianNeuralNetwork(object):
 	def __unpack_layers__(self, weight_samples):
 		for m, n in self.shapes:
 			yield weight_samples[:, :(m*n)].reshape((self.num_weight_samples, m, n)), \
-				  weight_samples[:, (m*n):((m*n) + n)].reshape((self.num_weight_samples, 1, n))
-		  	weight_samples = weight_samples[:, ((m+1) * n):]
+				weight_samples[:, (m*n):((m*n) + n)].reshape((self.num_weight_samples, 1, n))
+			weight_samples = weight_samples[:, ((m+1) * n):]
 
-  	def __predict__(self, weight_samples, inputs):
-  		if self.linear_latent_weights:
-  			num_inputs = inputs.shape[0]
-  			# Separate off latent weights
-  			latent_weights = inputs[:,-self.num_latent_params:]
-  			inputs = inputs[:,:-self.num_latent_params]
-  		for W, b in self.__unpack_layers__(weight_samples):
-  			outputs = np.matmul(inputs,W) + b
-  			inputs = self.nonlinearity(outputs)
-  		if self.linear_latent_weights:
-  			# First get NxDxK output
-  			first_outputs = np.reshape(outputs,(self.num_weight_samples,num_inputs,self.num_state_dims,self.num_latent_params))
-  			# Multiply by latent weights to get next states
-  			outputs = np.einsum('mndk,nk->mnd', first_outputs, latent_weights)
+	def __predict__(self, weight_samples, inputs):
+		if self.linear_latent_weights:
+			num_inputs = inputs.shape[0]
+			# Separate off latent weights
+			latent_weights = inputs[:,-self.num_latent_params:]
+			inputs = inputs[:,:-self.num_latent_params]
+		for W, b in self.__unpack_layers__(weight_samples):
+			outputs = np.matmul(inputs,W) + b
+			inputs = self.nonlinearity(outputs)
+		if self.linear_latent_weights:
+			# First get NxDxK output
+			first_outputs = np.reshape(outputs,(self.num_weight_samples,num_inputs,self.num_state_dims,self.num_latent_params))
+			# Multiply by latent weights to get next states
+			outputs = np.einsum('mndk,nk->mnd', first_outputs, latent_weights)
 		return outputs
-
+		
 	def __log_likelihood_factor__(self, samples_q, v_noise, X, wb, y):
 		# Account for occasions where we're optimizing the latent weighting distributions
 		if wb.shape[0] == 1:
@@ -160,7 +160,7 @@ class BayesianNeuralNetwork(object):
 		else:
 			return [slice(i, min(i+self.bnn_batch_size, self.N)) for i in range(0, self.N, self.bnn_batch_size)]
 
-	def energy(self, weights,  X, wb, y):
+	def energy(self, weights,X, wb, y):
 		v_noise = np.exp(self.parser.get(weights, 'log_v_noise')[0,0])
 		q = self.__get_parameters_q__(weights)
 		f_hat = self.__get_parameters_f_hat__(q)
@@ -208,7 +208,7 @@ class BayesianNeuralNetwork(object):
 		 	if use_all_exp==False, then an ExperienceReplay object must be supplied;
 		 	otherwise, a list of transitions must be supplied (where each transition is a numpy array)
 		task_weights -- the latent weights: a numpy array of with dimensions (number of instances x number of latent weights)
-		task_steps --  total steps taken in environment
+		task_steps --total steps taken in environment
 
 		Keyword Arguments:
 		state_diffs -- boolean indicating if the BNN should predict state differences rather than the next state (default: False)
@@ -262,7 +262,7 @@ class BayesianNeuralNetwork(object):
 		 	if use_all_exp==False, then an ExperienceReplay object must be supplied;
 		 	otherwise, a list of transitions must be supplied (where each transition is a numpy array)
 		wb -- the latent weights for the specific instance
-		task_steps --  total steps taken in environment
+		task_steps --total steps taken in environment
 
 		Keyword Arguments:
 		state_diffs -- boolean indicating if the BNN should predict state differences rather than the next state (default: False)
@@ -281,14 +281,14 @@ class BayesianNeuralNetwork(object):
 		if self.linear_latent_weights:
 			tmp_num_weight_samples = self.num_weight_samples
 			self.num_weight_samples = 1
-		for epoch in xrange(self.wb_opt_epochs):
+		for epoch in range(self.wb_opt_epochs):
 			# Gather a sample of data from the experience buffer, convert to input and target arrays
 			if use_all_exp:
 				batch = exp_buffer
 			else:
 				batch, __, indices = exp_buffer.sample(task_steps)
-			X = np.array([np.hstack([batch[tt,0], batch[tt,1]]) for tt in xrange(len(batch))])
-			y = np.array([batch[tt,3] for tt in xrange(len(batch))])
+			X = np.array([np.hstack([batch[tt,0], batch[tt,1]]) for tt in range(len(batch))])
+			y = np.array([batch[tt,3] for tt in range(len(batch))])
 			if state_diffs:
 				y = y - X[:, :batch[0,0].shape[0]]
 			self.N = X.shape[0]
@@ -305,7 +305,7 @@ class BayesianNeuralNetwork(object):
 				m2_hat = m2 / (1-beta2**t)
 				cur_latent_weights -= self.wb_learning_rate * m1_hat / (np.sqrt(m2_hat)+epsilon)
 			# Re-queue sampled data with updated TD-error calculations
-			X_latent_weights = np.vstack([cur_latent_weights[0] for i in xrange(X.shape[0])])
+			X_latent_weights = np.vstack([cur_latent_weights[0] for i in range(X.shape[0])])
 			if not use_all_exp and exp_buffer.mem_priority:
 				td_loss = self.get_td_error(np.hstack([X, X_latent_weights]), y, 0.0, 1.0)
 				exp_buffer.update_priorities(np.hstack((np.reshape(td_loss,(len(td_loss),-1)), np.reshape(indices,(len(indices),-1)))))

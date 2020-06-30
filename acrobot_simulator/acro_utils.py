@@ -132,6 +132,7 @@ def fromAtoB(x1, y1, x2, y2, color='k', connectionstyle="arc3,rad=-0.4",
     """
     if ax is None:
         return pl.annotate("",
+        # return ax.annotate("",
                            xy=(x2, y2), xycoords='data',
                            xytext=(x1, y1), textcoords='data',
                            arrowprops=dict(
