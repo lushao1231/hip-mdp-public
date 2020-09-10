@@ -44,11 +44,11 @@ batch_generator_hipmdp = HiPMDP(domain,preset_hidden_params,
 (exp_buffer, networkweights, rewards, avg_rwd_per_ep, full_task_weights,
      sys_param_set, mean_episode_errors, std_episode_errors) = batch_generator_hipmdp.run_experiment()
 
-with open('results/{}_exp_buffer'.format(domain),'wb') as f:
-        pickle.dump(exp_buffer,f)
+#with open('results/{}_exp_buffer'.format(domain),'wb') as f:
+#        pickle.dump(exp_buffer,f)
 
-# with open('results/{}_exp_buffer'.format(domain),'rb') as f:
-#      exp_buffer = pickle.load(f)
+with open('results/{}_exp_buffer'.format(domain),'rb') as f:
+     exp_buffer = pickle.load(f)
 print("STAGE 1 FINISHED")
 # Create numpy array 
 exp_buffer_np = np.vstack(exp_buffer)
@@ -62,8 +62,8 @@ for idx in range(batch_generator_hipmdp.instance_count):
     exp_dict[idx] = exp_buffer_np[inst_indices == idx]
 X = np.array([np.hstack([exp_buffer_np[tt,0],exp_buffer_np[tt,1]]) for tt in range(exp_buffer_np.shape[0])])
 y = np.array([exp_buffer_np[tt,3] for tt in range(exp_buffer_np.shape[0])])
-num_dims = 2
-num_actions = 4
+num_dims = 4
+num_actions = 3
 num_wb = 5
 if state_diffs:
     # subtract previous state
@@ -189,4 +189,4 @@ def plot_results(clean_results, test_inst):
 
 plot_results(clean_results, 0)
 plot_results(clean_results, 1)
-plt.show()
+#plt.show()

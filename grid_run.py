@@ -37,14 +37,14 @@ batch_generator_hipmdp = HiPMDP(domain,preset_hidden_params,
                                 grid_beta=grid_beta,
                                 print_output=False)
 
-(exp_buffer, networkweights, rewards, avg_rwd_per_ep, full_task_weights,
-     sys_param_set, mean_episode_errors, std_episode_errors) = batch_generator_hipmdp.run_experiment()
+# (exp_buffer, networkweights, rewards, avg_rwd_per_ep, full_task_weights,
+#      sys_param_set, mean_episode_errors, std_episode_errors) = batch_generator_hipmdp.run_experiment()
 
-with open('results/{}_exp_buffer'.format(domain),'wb') as f:
-        pickle.dump(exp_buffer,f)
+# with open('results/{}_exp_buffer'.format(domain),'wb') as f:
+#         pickle.dump(exp_buffer,f)
 
-# with open('results/{}_exp_buffer'.format(domain),'rb') as f:
-#      exp_buffer = pickle.load(f)
+with open('results/{}_exp_buffer'.format(domain),'rb') as f:
+     exp_buffer = pickle.load(f)
 
 print("STAGE 1 FINISHED")
 # Create numpy array 
@@ -99,40 +99,40 @@ def get_random_sample(start,stop,size):
     return np.array(list(indices_set))
 
 # size of sample to compute error on
-sample_size = 10000
-for i in range(40):    
-    # Update BNN network weights
-    network.fit_network(exp_buffer_np, full_task_weights, 0, state_diffs=state_diffs,
-                        use_all_exp=True)
-    print('finished BNN update '+str(i))
-    if i % 4 == 0:
-        #get random sample of indices
-        sample_indices = get_random_sample(0,X.shape[0],sample_size)
-        l2_errors = network.get_td_error(np.hstack((X[sample_indices],full_task_weights[inst_indices[sample_indices]])), y[sample_indices], location=0.0, scale=1.0, by_dim=False)
-        print ("After BNN update: iter: {}, Mean Error: {}, Std Error: {}".format(i,np.mean(l2_errors),np.std(l2_errors)))
-    # Update latent weights
-    for inst in np.random.permutation(batch_generator_hipmdp.instance_count):
-        print("run : ")
-        print(np.atleast_2d(full_task_weights[inst,:]))
-        full_task_weights[inst,:] = network.optimize_latent_weighting_stochastic(
-            exp_dict[inst],np.atleast_2d(full_task_weights[inst,:]),0,state_diffs=state_diffs,use_all_exp=True)
-    print ('finished wb update '+str(i))
-    # Compute error on sample of transitions
-    if i % 4 == 0:
-        #get random sample of indices
-        sample_indices = get_random_sample(0,X.shape[0],sample_size)
-        l2_errors = network.get_td_error(np.hstack((X[sample_indices],full_task_weights[inst_indices[sample_indices]])), y[sample_indices], location=0.0, scale=1.0, by_dim=False)
-        print ("After Latent update: iter: {}, Mean Error: {}, Std Error: {}".format(i,np.mean(l2_errors),np.std(l2_errors)))
-        # We check to see if the latent updates are sufficiently different so as to avoid fitting [erroneously] to the same dynamics
-        print ("L2 Difference in latent weights between instances: {}".format(np.sum((full_task_weights[0]-full_task_weights[1])**2)))
+# sample_size = 10000
+# for i in range(40):    
+#     # Update BNN network weights
+#     network.fit_network(exp_buffer_np, full_task_weights, 0, state_diffs=state_diffs,
+#                         use_all_exp=True)
+#     print('finished BNN update '+str(i))
+#     if i % 4 == 0:
+#         #get random sample of indices
+#         sample_indices = get_random_sample(0,X.shape[0],sample_size)
+#         l2_errors = network.get_td_error(np.hstack((X[sample_indices],full_task_weights[inst_indices[sample_indices]])), y[sample_indices], location=0.0, scale=1.0, by_dim=False)
+#         print ("After BNN update: iter: {}, Mean Error: {}, Std Error: {}".format(i,np.mean(l2_errors),np.std(l2_errors)))
+#     # Update latent weights
+#     for inst in np.random.permutation(batch_generator_hipmdp.instance_count):
+#         print("run : ")
+#         print(np.atleast_2d(full_task_weights[inst,:]))
+#         full_task_weights[inst,:] = network.optimize_latent_weighting_stochastic(
+#             exp_dict[inst],np.atleast_2d(full_task_weights[inst,:]),0,state_diffs=state_diffs,use_all_exp=True)
+#     print ('finished wb update '+str(i))
+#     # Compute error on sample of transitions
+#     if i % 4 == 0:
+#         #get random sample of indices
+#         sample_indices = get_random_sample(0,X.shape[0],sample_size)
+#         l2_errors = network.get_td_error(np.hstack((X[sample_indices],full_task_weights[inst_indices[sample_indices]])), y[sample_indices], location=0.0, scale=1.0, by_dim=False)
+#         print ("After Latent update: iter: {}, Mean Error: {}, Std Error: {}".format(i,np.mean(l2_errors),np.std(l2_errors)))
+#         # We check to see if the latent updates are sufficiently different so as to avoid fitting [erroneously] to the same dynamics
+#         print ("L2 Difference in latent weights between instances: {}".format(np.sum((full_task_weights[0]-full_task_weights[1])**2)))
 
-network_weights = network.weights
+# network_weights = network.weights
 
-with open('results/{}_network_weights'.format(domain), 'wb') as f:
-    pickle.dump(network.weights, f)
+# with open('results/{}_network_weights'.format(domain), 'wb') as f:
+#     pickle.dump(network.weights, f)
 
-# with open('results/{}_network_weights'.format(domain), 'rb') as f:
-#     network_weights = pickle.load(f)
+with open('results/{}_network_weights'.format(domain), 'rb') as f:
+    network_weights = pickle.load(f)
 print("STAGE 2 FINISHED")
 
 results = {}
@@ -188,4 +188,5 @@ def plot_results(clean_results, test_inst):
 
 plot_results(clean_results, 0)
 plot_results(clean_results, 1)
-plt.show()
+# plt.show()
+
