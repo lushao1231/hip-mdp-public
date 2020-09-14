@@ -1,11 +1,14 @@
 import pickle, os
 import tensorflow as tf
 import numpy as np
+# import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from SimpleNetwork import *
 from Simple_HiPMDP import SiPMDP
 from ExperienceReplay import ExperienceReplay
-from multiprocessing import Pool
+from datetime import datetime
 # import seaborn as sns
 # sns.set_style("whitegrid",{'axes.grid' : False})
 
@@ -13,7 +16,7 @@ tf.compat.v1.disable_eager_execution()
 if not os.path.isdir('./results'):
     os.mkdir('results')
 
-
+t1 = datetime.now()
 domain = 'grid' # 'acrobot'
 run_type = 'modelfree'
 num_batch_instances = 2
@@ -47,6 +50,8 @@ with open('results/simple_{}_exp_buffer'.format(domain),'wb') as f:
 #      exp_buffer = pickle.load(f)
 
 print("STAGE 1 FINISHED")
+t2 = datetime.now()
+print(t2-t1)
 # Create numpy array 
 exp_buffer_np = np.vstack(exp_buffer)
 # Collect the instances that each transition came from
@@ -132,7 +137,8 @@ with open('results/simple_{}_network_weights'.format(domain), 'wb') as f:
 # with open('results/simple_{}_network_weights'.format(domain), 'rb') as f:
 #     network_weights = pickle.load(f)
 print("STAGE 2 FINISHED")
-
+t3 = datetime.now()
+print(t3-t2)
 results = {}
 run_type = 'full'
 create_exp_batch = False
@@ -155,6 +161,8 @@ for run in range(5):
 #     results = pickle.load(f)
 
 print("STAGE 3 FINISHED")
+t4 = datetime.now()
+print(t4-t3)
 #PLOT RESULTS
 # Group rewards, errors by instance
 reward_key = 'Reward'
@@ -186,4 +194,7 @@ def plot_results(clean_results, test_inst):
 
 plot_results(clean_results, 0)
 plot_results(clean_results, 1)
-plt.show()
+# plt.show()
+t5 = datetime.now()
+print(t5-t4)
+

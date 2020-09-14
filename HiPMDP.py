@@ -477,6 +477,7 @@ class HiPMDP(object):
 			print('Action counts: {}'.format(self.action_counts))
 
 	def run_instance(self):
+		print('start of run instance')
 		"""Learn a policy and update the BNN (if desired) over the course of a single instance."""
 		# Get hidden parameter setting for this instance
 		self.__get_instance_param_set()
@@ -528,6 +529,7 @@ class HiPMDP(object):
 		just_completed_first_update = False
 		# Run episodes
 		while self.episode_iter < self.episode_count:
+			print('befor running episode')
 			self.run_episode()
 			if self.run_type != 'modelfree' and not self.initial_bnn_collection:
 				self.run_fictional_episode()
