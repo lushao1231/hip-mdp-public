@@ -210,6 +210,7 @@ class SimpleNetwork(object):
 		# print((y-logits)**2)
 		outputs = np.sqrt(np.sum((y-logits)**2))
 		# print(outputs)
+		print("SIMPLE_LOSS = ", outputs)
 		return outputs
 
 	def feed_forward(self, X, location=0.0, scale=1.0):
@@ -222,9 +223,11 @@ class SimpleNetwork(object):
 	def get_td_error(self, X, y, location=0.0, scale=1.0, by_dim=False):
 		# Compute the L2 norm of the error for each transition tuple in X
 		outputs = self.feed_forward(X, location, scale)
+		out = np.sqrt(np.sum((y-outputs)**2, axis=1))
 		if by_dim:
-			return (y-outputs)**2
-		return np.sqrt(np.sum((y-outputs)**2, axis=1))
+			out = (y-outputs)**2
+		print("TD_ERROR = ", out)
+		return out 
 
 	def get_prediction_std(self, X, location=0.0, scale=1.0):
 		q = self.__get_parameters_q__(self.weights)
@@ -279,6 +282,7 @@ class SimpleNetwork(object):
 			for idxs in batch_idxs:
 				t += 1
 				grad_w = energy_grad(weights, X[permutation[idxs]], wb[permutation[idxs]], y[permutation[idxs]])
+				print("GRAD = ", grad_w)
 				# m1 = beta1*m1 + (1-beta1)*grad_w
 				# m2 = beta2*m2 + (1-beta2)*grad_w**2
 				# m1_hat = m1 / (1-beta1**t)
